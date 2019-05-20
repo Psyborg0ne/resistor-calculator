@@ -15,15 +15,14 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.swing.SwingConstants;
-import javax.swing.text.html.HTMLDocument.Iterator;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+
+import resistor.Resistance;
 
 public class ResistFrame {
 
@@ -32,6 +31,9 @@ public class ResistFrame {
 	String canvasBack;
 	Color canvasColor;
 	HashMap<String, Color> canvasColors;
+	int resistorNum;
+	Resistance objResistance;
+	double mulNum, tolNum;
 
 	/**
 	 * Launch the application.
@@ -61,6 +63,10 @@ public class ResistFrame {
 	 */
 	private void initialize() {
 		clickedTimes = 0;
+		resistorNum = 0;
+		objResistance = new Resistance(2);
+		mulNum = 0d;
+		tolNum = 0d;
 		
 		canvasColors = new HashMap<String, Color>();
 		frmResistorCalculator = new JFrame();
@@ -78,6 +84,7 @@ public class ResistFrame {
 		panel.setLayout(null);
 		
 		JLabel lblResistance = new JLabel("Resistance:");
+		lblResistance.setHorizontalAlignment(SwingConstants.CENTER);
 		lblResistance.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
@@ -93,8 +100,8 @@ public class ResistFrame {
 				}
 			}
 		});
-		lblResistance.setFont(new Font("Arial Black", Font.PLAIN, 20));
-		lblResistance.setBounds(168, 286, 203, 29);
+		lblResistance.setFont(new Font("Arial Black", Font.PLAIN, 18));
+		lblResistance.setBounds(120, 286, 272, 28);
 		panel.add(lblResistance);
 		
 		JLabel digit1 = new JLabel("Digit 1");
@@ -168,12 +175,17 @@ public class ResistFrame {
 		comboDigit1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				canvas1.setBackground(canvasColors.get(comboDigit1.getSelectedItem()));
+				try {
+					objResistance.setFirDigit(getResistorNum(comboDigit1.getSelectedItem().toString()));
+					lblResistance.setText("Resistance: " + objResistance.format(objResistance.getTotal()) + "Ù  ±" + objResistance.getTolDigit() + "%");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}			
 			}
 		});
 		comboDigit1.setToolTipText("First");
 		comboDigit1.setSelectedIndex(-1);
 		comboDigit1.setBounds(168, 199, 67, 20);
-		comboDigit1.setSelectedItem(canvasColors.get("Red"));
 		panel.add(comboDigit1);
 		
 		
@@ -182,6 +194,12 @@ public class ResistFrame {
 		comboDigit2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				canvas2.setBackground(canvasColors.get(comboDigit2.getSelectedItem()));
+				try {
+					objResistance.setSecDigit(getResistorNum(comboDigit2.getSelectedItem().toString()));
+					lblResistance.setText("Resistance: " + objResistance.format(objResistance.getTotal()) + "Ù  ±" + objResistance.getTolDigit() + "%");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}	
 			}
 		});
 		comboDigit2.setToolTipText("Second");
@@ -193,8 +211,14 @@ public class ResistFrame {
 		//Digit 3 Combo Box
 		JComboBox comboDigit3 = new JComboBox();
 		comboDigit3.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent arg0) {
 				canvas3.setBackground(canvasColors.get(comboDigit3.getSelectedItem()));
+				try {
+					objResistance.setThiDigit(getResistorNum(comboDigit3.getSelectedItem().toString()));
+					lblResistance.setText("Resistance: " + objResistance.format(objResistance.getTotal()) + "Ù  ±" + objResistance.getTolDigit() + "%");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}		
 			}
 		});
 		comboDigit3.setToolTipText("Third");
@@ -206,8 +230,14 @@ public class ResistFrame {
 		//Multiplier Combo Box
 		JComboBox comboMult = new JComboBox();
 		comboMult.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent arg0) {
 				canvasMult.setBackground(canvasColors.get(comboMult.getSelectedItem()));
+				try {
+					objResistance.setMulDigit(getMultNum(comboMult.getSelectedItem().toString()));
+					lblResistance.setText("Resistance: " + objResistance.format(objResistance.getTotal()) + "Ù  ±" + objResistance.getTolDigit() + "%");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}	
 			}
 		});
 		comboMult.setToolTipText("Multiplier");
@@ -218,8 +248,15 @@ public class ResistFrame {
 		//Tolerance Combo Box
 		JComboBox comboTol = new JComboBox();
 		comboTol.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				canvasTol.setBackground(canvasColors.get(comboTol.getSelectedItem()));
+			public void actionPerformed(ActionEvent arg0) {
+				canvasTol.setBackground(canvasColors.get(comboTol.getSelectedItem()));			
+				try {
+					objResistance.setTolDigit(getTolNum(comboTol.getSelectedItem().toString()));
+					lblResistance.setText("Resistance: " + objResistance.format(objResistance.getTotal()) + "Ù  ±" + objResistance.getTolDigit() + "%");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}	
+				
 			}
 		});
 		comboTol.setToolTipText("Tolerance");
@@ -232,11 +269,14 @@ public class ResistFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				if (Integer.parseInt(comboNo.getSelectedItem().toString()) == 3) {
 					hideBands(canvas3, comboDigit3, digit3, true);
+					objResistance.setDigitNum(3);
 					BandsLbl.setText("5-Band Resistor");
 				}else { 
 					hideBands(canvas3, comboDigit3, digit3, false);
+					objResistance.setDigitNum(2);
 					BandsLbl.setText("4-Band Resistor");
 				}
+				lblResistance.setText("Resistance: " + objResistance.format(objResistance.getTotal()) + "Ù  ±" + objResistance.getTolDigit() + "%");
 			}
 		});
 		comboNo.setToolTipText("Select the number of digits (first three bands)");
@@ -302,11 +342,11 @@ public class ResistFrame {
 				break;
 				
 			case "Multiplier":
-				cb.addItem(str);
+				if (str != "Silver") {cb.addItem(str);}
 				break;
 				
 			case "Tolerance":
-				if (str != "Orange" && str != "Yellow" && str != "White") {cb.addItem(str);}
+				if (str != "Orange" && str != "Yellow" && str != "White" && str != "Black") {cb.addItem(str);}
 				break;
 
 			default:
@@ -314,4 +354,162 @@ public class ResistFrame {
 			} //switch
 		} //while
 	} //init colors
+	
+	public int getResistorNum(String c) {
+		
+		switch (c) {
+		case "Black":
+			resistorNum = 0;
+			break;
+			
+		case "Brown":
+			resistorNum = 1;
+			break;
+			
+		case "Red":
+			resistorNum = 2;
+			break;	
+			
+		case "Orange":
+			resistorNum = 3;
+			break;	
+			
+		case "Yellow":
+			resistorNum = 4;
+			break;
+			
+		case "Green":
+			resistorNum = 5;
+			break;
+			
+		case "Blue":
+			resistorNum = 6;
+			break;	
+			
+		case "Violet":
+			resistorNum = 7;
+			break;
+			
+		case "Gray":
+			resistorNum = 8;
+			break;
+			
+		case "White":
+			resistorNum = 9;
+			break;	
+			
+		case "Gold":
+			resistorNum = 0;
+			break;
+			
+		case "Silver":
+			resistorNum = 0;
+			break;	
+
+		default:
+			resistorNum = 0;
+			break;
+		}
+		
+		
+		return resistorNum;
+	}
+	
+	public double getMultNum(String c) {
+
+		switch (c) {
+		case "Black":
+			mulNum = 1d;
+			break;
+			
+		case "Brown":
+			mulNum = 10;
+			break;
+			
+		case "Red":
+			mulNum = 100;
+			break;	
+			
+		case "Orange":
+			mulNum = 1000;
+			break;	
+			
+		case "Yellow":
+			mulNum = 10000;
+			break;
+			
+		case "Green":
+			mulNum = 100000;
+			break;
+			
+		case "Blue":
+			mulNum = 1000000;
+			break;	
+			
+		case "Violet":
+			mulNum = 10000000;
+			break;
+			
+		case "Gray":
+			mulNum = 100000000;
+			break;
+			
+		case "White":
+			mulNum = 1000000000;
+			break;	
+			
+		case "Gold":
+			mulNum = 0.1;
+			break;
+
+		default:
+			mulNum = 0;
+			break;
+		}
+		
+		return mulNum;
+	}
+	
+	public double getTolNum(String c) {
+		switch (c) {
+		
+		case "Brown":
+			tolNum = 1;
+			break;
+			
+		case "Red":
+			tolNum = 2;
+			break;	
+			
+		case "Green":
+			tolNum = 0.5d;
+			break;
+			
+		case "Blue":
+			tolNum = 0.25d;
+			break;	
+			
+		case "Violet":
+			tolNum = 0.10d;
+			break;
+			
+		case "Gray":
+			tolNum = 0.05d;
+			break;
+			
+		case "Gold":
+			tolNum = 5;
+			break;
+			
+		case "Silver":
+			tolNum = 10;
+			break;
+
+		default:
+			tolNum = 0;
+			break;
+		}
+		
+		return tolNum;
+	}
 }
